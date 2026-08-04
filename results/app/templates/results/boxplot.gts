@@ -14,8 +14,10 @@ import { SortControl } from "#components/sort-control.gts";
 import { frameworks } from "#frameworks";
 import {
   columnsFor,
+  effectsBenches,
   formatRunName,
   higherIsBetterBenches,
+  isEffectsBench,
   lowerIsBetterBenches,
   percentileFrom,
   samplesOf,
@@ -199,8 +201,17 @@ export default class Boxplat extends Component<{
     return this.sorted(lowerIsBetterBenches(this.args.model.data.benchmarkInfo));
   }
 
-  columnsForBench = (benchInfo: BenchmarkInfo) =>
-    isBiggerBetter(benchInfo) ? this.higherColumns : this.lowerColumns;
+  @cached
+  get effectColumns() {
+    return this.sorted(effectsBenches(this.args.model.data.benchmarkInfo));
+  }
+
+  columnsForBench = (benchInfo: BenchmarkInfo) => {
+    if (isBiggerBetter(benchInfo)) return this.higherColumns;
+    if (isEffectsBench(benchInfo)) return this.effectColumns;
+
+    return this.lowerColumns;
+  };
 
   settingParams = ["hide", "from", "sort"] as const;
 
