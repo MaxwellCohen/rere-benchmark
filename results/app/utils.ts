@@ -2,7 +2,7 @@ import { assert, warn } from "@ember/debug";
 
 import { experiments, metadata } from "virtual:result-sets";
 
-import { frameworks } from "./frameworks.ts";
+import { frameworks, nameOf } from "./frameworks.ts";
 
 import type QueryParams from "#services/query-params.ts";
 import type { BenchmarkInfo, Column, Mark, ResultData, ResultSet } from "#types";
@@ -431,25 +431,31 @@ export function curveFrom(qp: QueryParams): number {
   return Number.isFinite(curve) ? curve : DEFAULT_CURVE;
 }
 
-export type TotalSort = "best" | "worst";
+export type TotalSort = "best" | "worst" | "alphabetical";
+
+export const DEFAULT_SORT: TotalSort = "best";
 
 /**
  * The `?sort=` query param, wherever a component needs it.
- * Absent (or anything unrecognized) means the recorded order.
+ *
+ * Absent (or anything unrecognized) is best-first: the question the tables
+ * exist to answer is which framework won, and answering it should not need
+ * a setting.
  */
-export function totalSortFrom(qp: QueryParams): TotalSort | undefined {
+export function totalSortFrom(qp: QueryParams): TotalSort {
   const sort = qp.get("sort");
 
-  return sort === "best" || sort === "worst" ? sort : undefined;
+  return sort === "worst" || sort === "alphabetical" || sort === "best" ? sort : DEFAULT_SORT;
 }
 
 /**
- * Columns ordered by their summed result over one area's benches.
+ * Columns in the order the reader asked for.
  *
  * "best" and "worst" are stated in the area's own direction -- best-first
  * is the highest total when bigger is better and the lowest when smaller
  * is -- so the same setting reads coherently across both areas. Columns
- * with no data for the area go last either way.
+ * with no data for the area go last either way. "alphabetical" ignores the
+ * numbers and orders by displayed name.
  *
  * Each column carries the run it reads from, so a borrowed column sorts on
  * its own numbers rather than being pinned to one end.
@@ -460,6 +466,10 @@ export function sortedByTotal(
   percentile: Percentile,
   sort: TotalSort,
 ) {
+  if (sort === "alphabetical") {
+    return columns.toSorted((a, b) => nameOf(a.framework).localeCompare(nameOf(b.framework)));
+  }
+
   const totals = new Map<string, number>();
 
   for (const column of columns) {

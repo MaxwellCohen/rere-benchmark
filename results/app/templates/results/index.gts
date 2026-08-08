@@ -462,11 +462,7 @@ export default class ResultsTables extends Component<{
   }
 
   sorted(benches: BenchmarkInfo[]) {
-    const sort = totalSortFrom(this.queryParams);
-
-    if (!sort) return this.columns;
-
-    return sortedByTotal(this.columns, benches, this.percentile, sort);
+    return sortedByTotal(this.columns, benches, this.percentile, totalSortFrom(this.queryParams));
   }
 
   @cached

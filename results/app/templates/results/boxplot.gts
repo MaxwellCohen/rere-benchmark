@@ -181,11 +181,12 @@ export default class Boxplat extends Component<{
   }
 
   sorted(benches: BenchmarkInfo[]) {
-    const sort = totalSortFrom(this.queryParams);
-
-    if (!sort) return this.columns;
-
-    return sortedByTotal(this.columns, benches, percentileFrom(this.queryParams), sort);
+    return sortedByTotal(
+      this.columns,
+      benches,
+      percentileFrom(this.queryParams),
+      totalSortFrom(this.queryParams),
+    );
   }
 
   @cached
