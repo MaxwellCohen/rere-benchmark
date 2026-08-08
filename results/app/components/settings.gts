@@ -1,7 +1,7 @@
 import Component from "@glimmer/component";
 import { service } from "@ember/service";
 
-import { DEFAULT_CURVE, DEFAULT_PERCENTILE } from "#utils";
+import { DEFAULT_CURVE, DEFAULT_PERCENTILE, DEFAULT_SORT } from "#utils";
 
 import type Owner from "@ember/owner";
 import type QueryParams from "#services/query-params.ts";
@@ -10,6 +10,7 @@ const DEFAULTS: Record<string, string> = {
   mode: "raw",
   p: String(DEFAULT_PERCENTILE),
   curve: String(DEFAULT_CURVE),
+  sort: DEFAULT_SORT,
 };
 
 function hasNonDefaults(qp: QueryParams, params: readonly string[]) {
