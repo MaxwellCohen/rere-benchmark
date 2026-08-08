@@ -497,43 +497,46 @@ export function borrowLabel(index: number) {
 }
 
 /**
- * The table's own columns, plus the borrowed one if a column is on loan.
+ * The table's own columns, plus one per borrowed column.
  *
- * In the recorded order the borrowed column sits directly beside the
+ * In the recorded order each borrowed column sits directly beside the
  * framework it is on loan against, so the two read as a pair. Sorting then
  * moves it on its own total like any other column.
  */
 export function columnsFor(
   file: ResultSet,
   frameworks: string[],
-  borrow: { name: string; data: ResultSet; framework: string } | undefined,
+  borrows: readonly { name: string; data: ResultSet; framework: string }[],
 ): Column[] {
-  const columns: Column[] = frameworks.map((framework) => ({
+  let columns: Column[] = frameworks.map((framework) => ({
     key: framework,
     framework,
     data: file,
   }));
 
-  if (!borrow) return columns;
+  for (const [index, borrow] of borrows.entries()) {
+    const borrowed: Column = {
+      // a borrowed column can repeat a framework the table already shows,
+      // so the run it came from has to be part of its identity
+      key: `borrowed:${borrow.name}:${borrow.framework}`,
+      framework: borrow.framework,
+      data: borrow.data,
+      borrowedFrom: borrow.name,
+      label: borrowLabel(index),
+    };
 
-  const borrowed: Column = {
-    // a borrowed column can repeat a framework the table already shows, so
-    // the run it came from has to be part of its identity
-    key: `borrowed:${borrow.name}:${borrow.framework}`,
-    framework: borrow.framework,
-    data: borrow.data,
-    borrowedFrom: borrow.name,
-    // only one borrow is possible so far; this becomes its position once
-    // several can be on loan at once
-    label: borrowLabel(0),
-  };
+    // after the last column for this framework, so two borrows of the same
+    // one land in A, B order rather than reversed
+    const counterpart = columns.findLastIndex((column) => column.framework === borrow.framework);
 
-  const counterpart = columns.findIndex((column) => column.framework === borrow.framework);
+    // the framework can be hidden, or absent from this run entirely
+    columns =
+      counterpart === -1
+        ? columns.concat(borrowed)
+        : columns.toSpliced(counterpart + 1, 0, borrowed);
+  }
 
-  // the framework can be hidden, or absent from this run entirely
-  if (counterpart === -1) return columns.concat(borrowed);
-
-  return columns.toSpliced(counterpart + 1, 0, borrowed);
+  return columns;
 }
 
 export function labelFor(percentile: Percentile) {
