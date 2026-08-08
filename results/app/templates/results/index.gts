@@ -6,7 +6,7 @@ import { service } from "@ember/service";
 import { interpolate } from "culori";
 
 import { BenchmarkName } from "#components/benchmark-name.gts";
-import { borrowOf, BorrowPicker } from "#components/borrow-picker.gts";
+import { BorrowPicker, borrowsOf } from "#components/borrow-picker.gts";
 import { FrameworkInfo } from "#components/framework-info.gts";
 import { FrameworkToggles, visibleFrameworksOf } from "#components/framework-toggles.gts";
 import { Settings } from "#components/settings.gts";
@@ -432,8 +432,8 @@ export default class ResultsTables extends Component<{
     return this.args.model.data;
   }
 
-  get borrow() {
-    return borrowOf(this.queryParams, this.args.model.borrowed);
+  get borrows() {
+    return borrowsOf(this.queryParams, this.args.model.borrowed);
   }
 
   get visibleFrameworks() {
@@ -442,7 +442,7 @@ export default class ResultsTables extends Component<{
 
   @cached
   get columns() {
-    return columnsFor(this.file, this.visibleFrameworks, this.borrow);
+    return columnsFor(this.file, this.visibleFrameworks, this.borrows);
   }
 
   settingParams = ["mode", "p", "hide", "from", "sort", "curve"] as const;

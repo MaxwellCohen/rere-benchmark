@@ -7,7 +7,7 @@ import { BoxPlotChart } from "@sgratzl/chartjs-chart-boxplot";
 import { converter, filterBrightness, formatCss } from "culori";
 import { modifier } from "ember-modifier";
 
-import { borrowOf, BorrowPicker } from "#components/borrow-picker.gts";
+import { BorrowPicker, borrowsOf } from "#components/borrow-picker.gts";
 import { FrameworkToggles, visibleFrameworksOf } from "#components/framework-toggles.gts";
 import { Settings } from "#components/settings.gts";
 import { SortControl } from "#components/sort-control.gts";
@@ -177,7 +177,7 @@ export default class Boxplat extends Component<{
 
   @cached
   get columns() {
-    return columnsFor(this.args.model.data, this.frameworks, this.borrow);
+    return columnsFor(this.args.model.data, this.frameworks, this.borrows);
   }
 
   sorted(benches: BenchmarkInfo[]) {
@@ -203,12 +203,12 @@ export default class Boxplat extends Component<{
 
   settingParams = ["hide", "from", "sort"] as const;
 
-  get borrow() {
-    return borrowOf(this.queryParams, this.args.model.borrowed);
+  get borrows() {
+    return borrowsOf(this.queryParams, this.args.model.borrowed);
   }
 
   get rows() {
-    return this.frameworks.length + (this.borrow ? 1 : 0);
+    return this.frameworks.length + this.borrows.length;
   }
 
   get height() {

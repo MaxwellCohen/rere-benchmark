@@ -19,7 +19,8 @@ export interface Borrowed {
 
 export interface Model {
   data: ResultSet;
-  borrowed?: Borrowed;
+  /** every run with a column on loan, in the order `?from=` lists them */
+  borrowed: Borrowed[];
 }
 
 export default class Results extends Route<Model> {
@@ -27,9 +28,10 @@ export default class Results extends Route<Model> {
 
   queryParams = {
     q: { refreshModel: true },
+    // comma-separated: one run per borrowed column
     from: { refreshModel: true },
-    // which of the borrowed set's frameworks; the set is already loaded,
-    // so no model impact
+    // comma-separated, positional against `from`: which framework to take
+    // from each. Those sets are already loaded, so no model impact.
     col: {},
     hide: {},
     // order frameworks by their per-area totals (best | worst); no model impact
@@ -65,16 +67,18 @@ export default class Results extends Route<Model> {
     // SAFETY: verified in beforeModel
     const { q, from } = params as unknown as Params;
 
+    // duplicates would collide as columns and there is nothing to gain from
+    // borrowing the same run twice
+    const names = Array.from(new Set(from ? from.split(",").filter(Boolean) : []));
+
     try {
-      const [data, borrowedData] = await Promise.all([
+      // paired inside the fetch, so nothing has to line two arrays back up
+      const [data, borrowed] = await Promise.all([
         fetchResultSet(q),
-        from ? fetchResultSet(from) : undefined,
+        Promise.all(names.map(async (name) => ({ name, data: await fetchResultSet(name) }))),
       ]);
 
-      return {
-        data,
-        borrowed: from && borrowedData ? { name: from, data: borrowedData } : undefined,
-      };
+      return { data, borrowed };
     } catch (e) {
       console.error(e);
       // SAFETY: don't care -- the fact that people can throw non-errors is a mistake
