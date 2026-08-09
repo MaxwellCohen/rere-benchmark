@@ -9,6 +9,7 @@ import { BenchmarkName } from "#components/benchmark-name.gts";
 import { BorrowPicker, borrowsOf } from "#components/borrow-picker.gts";
 import { FrameworkInfo } from "#components/framework-info.gts";
 import { FrameworkToggles, visibleFrameworksOf } from "#components/framework-toggles.gts";
+import { PercentileControl } from "#components/percentile-control.gts";
 import { Settings } from "#components/settings.gts";
 import { SortControl } from "#components/sort-control.gts";
 import { Variant } from "#components/variant.gts";
@@ -24,7 +25,6 @@ import {
   lowerIsBetterBenches,
   overrideOf,
   percentileFrom,
-  PERCENTILES,
   round,
   sortedByTotal,
   throttleLabel,
@@ -397,17 +397,9 @@ export default class ResultsTables extends Component<{
 
   isMode = (mode: ValueMode) => this.mode === mode;
 
-  percentiles = PERCENTILES;
-
   get percentile(): Percentile {
     return percentileFrom(this.queryParams);
   }
-
-  setPercentile = (percentile: Percentile) => {
-    this.router.transitionTo({ queryParams: { p: percentile } });
-  };
-
-  isPercentile = (percentile: Percentile) => this.percentile === percentile;
 
   get curve() {
     return curveFrom(this.queryParams);
@@ -426,8 +418,6 @@ export default class ResultsTables extends Component<{
       queryParams: { curve: valueAsNumber === DEFAULT_CURVE ? null : valueAsNumber },
     });
   };
-
-  labelFor = labelFor;
 
   get file() {
     return this.args.model.data;
@@ -521,23 +511,7 @@ export default class ResultsTables extends Component<{
         </label>
       </fieldset>
 
-      <fieldset class="value-mode surface">
-        <legend>statistic</legend>
-        {{#each this.percentiles as |percentile|}}
-          <label>
-            <input
-              type="radio"
-              name="percentile"
-              checked={{this.isPercentile percentile}}
-              {{on "change" (fn this.setPercentile percentile)}}
-            />
-            {{this.labelFor percentile}}
-          </label>
-        {{/each}}
-        {{! percentiles run toward the worse end either way, so the same
-          number means the same thing on both tables }}
-        <span class="units">of each run's samples</span>
-      </fieldset>
+      <PercentileControl />
 
       <fieldset class="value-mode surface">
         <legend>color curve</legend>
