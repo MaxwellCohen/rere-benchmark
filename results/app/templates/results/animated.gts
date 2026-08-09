@@ -4,6 +4,9 @@ import { assert } from "@ember/debug";
 import { service } from "@ember/service";
 
 import { FrameworkInfo } from "#components/framework-info.gts";
+import { FrameworkToggles, visibleFrameworksOf } from "#components/framework-toggles.gts";
+import { PercentileControl } from "#components/percentile-control.gts";
+import { Settings } from "#components/settings.gts";
 import { Variant } from "#components/variant.gts";
 import { Version } from "#components/version.gts";
 import { dataOf, percentileFrom, round, variantOf } from "#utils";
@@ -27,12 +30,30 @@ export default class Animated extends Component<{
       .toSorted((a, b) => (a.name.includes("async") ? 1 : 0) - (b.name.includes("async") ? 1 : 0));
   }
 
+  // sort and borrows are column concepts; this view already orders its
+  // rows by speed, so only the row-level settings apply
+  settingParams = ["p", "hide"] as const;
+
+  resultsFor = (benchInfo: BenchmarkInfo) => {
+    const visible = visibleFrameworksOf(this.queryParams, this.args.model.data);
+
+    return dataOf(this.args.model.data.results, benchInfo.name, this.percentile).filter((result) =>
+      visible.includes(result.name),
+    );
+  };
+
   <template>
+    <Settings @params={{this.settingParams}}>
+      <PercentileControl />
+
+      <FrameworkToggles @file={{@model.data}} />
+    </Settings>
+
     {{#each this.benchmarkInfo as |benchInfo|}}
       <Visualize
         @benchInfo={{benchInfo}}
         @file={{@model.data}}
-        @results={{dataOf @model.data.results benchInfo.name this.percentile}}
+        @results={{this.resultsFor benchInfo}}
       />
     {{/each}}
   </template>
