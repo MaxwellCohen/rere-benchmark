@@ -17,6 +17,7 @@ import {
   columnsFor,
   curveFrom,
   DEFAULT_CURVE,
+  effectsBenches,
   formatRunName,
   higherIsBetterBenches,
   labelFor,
@@ -461,6 +462,11 @@ export default class ResultsTables extends Component<{
     return lowerIsBetterBenches(this.benchmarkInfo);
   }
 
+  @cached
+  get effectBenches() {
+    return effectsBenches(this.benchmarkInfo);
+  }
+
   sorted(benches: BenchmarkInfo[]) {
     return sortedByTotal(this.columns, benches, this.percentile, totalSortFrom(this.queryParams));
   }
@@ -473,6 +479,11 @@ export default class ResultsTables extends Component<{
   @cached
   get lowerColumns() {
     return this.sorted(this.lowerBenches);
+  }
+
+  @cached
+  get effectColumns() {
+    return this.sorted(this.effectBenches);
   }
 
   <template>
@@ -563,6 +574,15 @@ export default class ResultsTables extends Component<{
       <h2>lower is better</h2>
 
       <Table @benches={{this.lowerBenches}} @file={{this.file}} @columns={{this.lowerColumns}} />
+      <br />
+      <br />
+      <br />
+    {{/if}}
+
+    {{#if this.effectBenches.length}}
+      <h2>effects (lower is better)</h2>
+
+      <Table @benches={{this.effectBenches}} @file={{this.file}} @columns={{this.effectColumns}} />
       <br />
       <br />
       <br />
